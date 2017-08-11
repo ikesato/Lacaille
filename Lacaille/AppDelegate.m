@@ -52,9 +52,19 @@ NSMutableData *gKeySheetValue;
 int gKeySheetValueLength;   // N.B. 10.9 or lower does not support NSMutableData.length
 
 NSFileHandle *debugOutFile = nil;
-#define debugOut(...) \
-// [((debugOutFile == nil) ? (debugOutFile = [NSFileHandle fileHandleWithStandardOutput]) : debugOutFile) \
-//  writeData:[[NSString stringWithFormat:__VA_ARGS__] dataUsingEncoding:NSUTF8StringEncoding]]
+void debugOut(NSString *formatString, ...)
+{
+    if (debugOutFile == nil) {
+        NSString *path = @"/Users/ikeda/tmp/hoge.log";
+        [[NSFileManager defaultManager] createFileAtPath:path contents:nil attributes:nil];
+        debugOutFile = [NSFileHandle fileHandleForWritingAtPath:path];
+    }
+    va_list args;
+    va_start(args, formatString);
+    NSString *msg = [[NSString alloc] initWithFormat:formatString arguments:args];
+    va_end(args);
+    [debugOutFile writeData:[[NSString stringWithFormat:@"%@", msg] dataUsingEncoding:NSUTF8StringEncoding]];
+}
 
 
 #define LAYOUT_KEY_COUNT    50      // キーの個数
