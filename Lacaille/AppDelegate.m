@@ -52,18 +52,33 @@ NSMutableData *gKeySheetValue;
 int gKeySheetValueLength;   // N.B. 10.9 or lower does not support NSMutableData.length
 
 NSFileHandle *debugOutFile = nil;
+NSString *debugOutFileName = nil;
 void debugOut(NSString *formatString, ...)
 {
-    if (debugOutFile == nil) {
-        NSString *path = @"/Users/ikeda/tmp/hoge.log";
-        [[NSFileManager defaultManager] createFileAtPath:path contents:nil attributes:nil];
+    NSDate *date = [NSDate date];
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    dateFormatter.dateFormat = @"yyyyMMdd";
+    NSString *dateString = [dateFormatter stringFromDate:date];
+    NSString *path = [NSString stringWithFormat:@"/Users/ikeda/tmp/lacaille%@.log", dateString];
+
+    if (debugOutFile == nil || [debugOutFileName isEqualToString:path] == NO) {
+        debugOutFileName = path;
+        if ([[NSFileManager defaultManager] fileExistsAtPath:path] == NO)
+            [[NSFileManager defaultManager] createFileAtPath:path contents:nil attributes:nil];
+        if (debugOutFile != nil)
+            [debugOutFile closeFile];
         debugOutFile = [NSFileHandle fileHandleForWritingAtPath:path];
+        [debugOutFile seekToEndOfFile];
     }
     va_list args;
     va_start(args, formatString);
     NSString *msg = [[NSString alloc] initWithFormat:formatString arguments:args];
     va_end(args);
-    [debugOutFile writeData:[[NSString stringWithFormat:@"%@", msg] dataUsingEncoding:NSUTF8StringEncoding]];
+
+    dateFormatter.dateFormat = @"yyyy-MM-dd HH:mm:ss";
+    dateString = [dateFormatter stringFromDate:date];
+    int pid = [[NSProcessInfo processInfo] processIdentifier];
+    [debugOutFile writeData:[[NSString stringWithFormat:@"[%@ #%d] %@", dateString, pid, msg] dataUsingEncoding:NSUTF8StringEncoding]];
 }
 
 
