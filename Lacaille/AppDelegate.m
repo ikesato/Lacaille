@@ -75,7 +75,7 @@ void debugOut(NSString *formatString, ...)
     NSString *msg = [[NSString alloc] initWithFormat:formatString arguments:args];
     va_end(args);
 
-    dateFormatter.dateFormat = @"yyyy-MM-dd HH:mm:ss";
+    dateFormatter.dateFormat = @"yyyy-MM-dd HH:mm:ss.SSS";
     dateString = [dateFormatter stringFromDate:date];
     int pid = [[NSProcessInfo processInfo] processIdentifier];
     [debugOutFile writeData:[[NSString stringWithFormat:@"[%@ #%d] %@", dateString, pid, msg] dataUsingEncoding:NSUTF8StringEncoding]];
@@ -988,7 +988,7 @@ void myCGEventPostToPid(pid_t pid, CGEventRef event) {
     }
     CFRetain(event);
     
-    debugOut(@"[Post] Type=%d Keycode=%d\n", CGEventGetType(event), (CGKeyCode)CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode));
+    debugOut(@"[Post] Type=%d Flags=<%llx> Keycode=%d\n", CGEventGetType(event), (CGEventFlags)CGEventGetFlags(event),(CGKeyCode)CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode));
     if (CGEventPostToPid != NULL) {
         // 10.11 or higher
         CGEventPostToPid(pid, event);
@@ -1104,8 +1104,8 @@ static CGEventRef keyUpDownEventCallback(CGEventTapProxy proxy, CGEventType type
     gTargetPid = (pid_t)CGEventGetIntegerValueField(event, kCGEventTargetUnixProcessID);
     pid_t targetPid = gTargetPid;
     
-    debugOut(@"[EV] Keycode=%d, Flags=<%llx>, Type=%d, gTargetPid=%d\n",
-             (CGKeyCode)CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode), (CGEventFlags)CGEventGetFlags(event), type, gTargetPid);
+    debugOut(@"[EV] Keycode=%d, Flags=<%llx>, Type=%d, gTargetPid=%d pid=%d\n",
+             (CGKeyCode)CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode), (CGEventFlags)CGEventGetFlags(event), type, gTargetPid, getpid());
     
     CGKeyCode keycode = (CGKeyCode)CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
     
